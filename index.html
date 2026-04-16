@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>CDD Tracker – Suivi Indemnités</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0e17;
+  --surface: #111827;
+  --surface2: #1a2235;
+  --border: #1e2a3e;
+  --border-glow: #2563eb20;
+  --text: #e2e8f0;
+  --text-dim: #64748b;
+  --text-muted: #475569;
+  --accent: #3b82f6;
+  --accent-glow: #3b82f640;
+  --green: #10b981;
+  --green-dim: #10b98130;
+  --amber: #f59e0b;
+  --amber-dim: #f59e0b30;
+  --red: #ef4444;
+  --red-dim: #ef444430;
+  --cyan: #06b6d4;
+  --cyan-dim: #06b6d430;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100dvh;
+  overflow-x: hidden;
+}
+
+.mono { font-family: 'JetBrains Mono', monospace; }
+
+/* Header */
+.header {
+  padding: 16px 20px 12px;
+  background: linear-gradient(180deg, #111827 0%, var(--bg) 100%);
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 100;
+}
+.header-top { display: flex; justify-content: space-between; align-items: center; }
+.header h1 { font-size: 18px; font-weight: 700; letter-spacing: -0.5px; }
+.header h1 span { color: var(--accent); }
+.header-badge {
+  font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;
+  color: var(--amber); background: var(--amber-dim); padding: 4px 10px; border-radius: 20px;
+}
+.header-sub { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
+
+/* Navigation tabs */
+.tabs {
+  display: flex; gap: 4px; padding: 8px 20px;
+  overflow-x: auto; scrollbar-width: none;
+  background: var(--bg);
+  position: sticky; top: 68px; z-index: 99;
+}
+.tabs::-webkit-scrollbar { display: none; }
+.tab {
+  padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600;
+  background: var(--surface); color: var(--text-dim); border: 1px solid var(--border);
+  cursor: pointer; white-space: nowrap; transition: all 0.2s;
+}
+.tab.active { background: var(--accent); color: white; border-color: var(--accent); }
+
+/* Main content */
+.content { padding: 16px 20px 100px; }
+
+/* Cards */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+.card-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 16px;
+}
+.card-title { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); }
+.card-label { font-size: 11px; color: var(--text-muted); }
+
+/* Big numbers */
+.big-number { font-family: 'JetBrains Mono', monospace; font-size: 32px; font-weight: 700; letter-spacing: -1px; }
+.big-number.green { color: var(--green); }
+.big-number.amber { color: var(--amber); }
+.big-number.cyan { color: var(--cyan); }
+.big-number.accent { color: var(--accent); }
+
+.unit { font-size: 14px; font-weight: 400; color: var(--text-dim); margin-left: 4px; }
+
+/* Progress bar */
+.progress-container { margin-top: 12px; }
+.progress-bar-bg {
+  height: 8px; background: var(--surface2); border-radius: 4px; overflow: hidden;
+}
+.progress-bar-fill {
+  height: 100%; border-radius: 4px; transition: width 0.5s ease;
+  background: linear-gradient(90deg, var(--accent), var(--cyan));
+}
+.progress-labels {
+  display: flex; justify-content: space-between; margin-top: 6px;
+  font-size: 11px; color: var(--text-dim);
+}
+
+/* Stat grid */
+.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.stat-box {
+  background: var(--surface2); border-radius: 12px; padding: 14px;
+  border: 1px solid var(--border);
+}
+.stat-box .label { font-size: 11px; color: var(--text-dim); margin-bottom: 6px; }
+.stat-box .value { font-family: 'JetBrains Mono', monospace; font-size: 20px; font-weight: 700; }
+.stat-box .sub { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+
+/* Salary input */
+.month-input-group { margin-bottom: 12px; }
+.month-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px; background: var(--surface2); border-radius: 12px;
+  border: 1px solid var(--border); margin-bottom: 8px;
+  transition: border-color 0.2s;
+}
+.month-row:focus-within { border-color: var(--accent); }
+.month-label { font-size: 13px; font-weight: 600; min-width: 44px; }
+.month-sublabel { font-size: 11px; color: var(--text-dim); flex: 1; }
+.month-input {
+  width: 110px; text-align: right; padding: 8px 12px;
+  background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+  color: var(--text); font-family: 'JetBrains Mono', monospace;
+  font-size: 14px; font-weight: 600; outline: none;
+}
+.month-input:focus { border-color: var(--accent); }
+.month-input::placeholder { color: var(--text-muted); }
+
+.month-row.filled { border-left: 3px solid var(--green); }
+.month-row.current { border-left: 3px solid var(--amber); }
+.month-row.future { opacity: 0.5; }
+
+/* Timeline */
+.timeline-item {
+  display: flex; gap: 14px; padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+.timeline-item:last-child { border-bottom: none; }
+.timeline-dot {
+  width: 10px; height: 10px; border-radius: 50%; margin-top: 5px; flex-shrink: 0;
+}
+.timeline-content { flex: 1; }
+.timeline-title { font-size: 14px; font-weight: 600; }
+.timeline-desc { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
+.timeline-amount { font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 700; margin-top: 4px; }
+
+/* ARE detail */
+.are-breakdown {
+  display: flex; flex-direction: column; gap: 8px; margin-top: 12px;
+}
+.are-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 14px; background: var(--surface2); border-radius: 10px;
+}
+.are-row .label { font-size: 13px; }
+.are-row .value { font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 600; }
+
+/* Section title */
+.section-title {
+  font-size: 16px; font-weight: 700; margin-bottom: 12px;
+  display: flex; align-items: center; gap: 8px;
+}
+.section-title .icon { font-size: 18px; }
+
+/* Scroll hint */
+.scroll-top {
+  position: fixed; bottom: 20px; right: 20px;
+  width: 44px; height: 44px; border-radius: 50%;
+  background: var(--accent); color: white; border: none;
+  font-size: 18px; cursor: pointer; z-index: 200;
+  display: none; align-items: center; justify-content: center;
+  box-shadow: 0 4px 20px var(--accent-glow);
+}
+
+/* Divider */
+.divider { height: 1px; background: var(--border); margin: 16px 0; }
+
+/* Info callout */
+.callout {
+  background: var(--surface2); border-left: 3px solid var(--amber);
+  border-radius: 0 10px 10px 0; padding: 12px 14px;
+  font-size: 12px; color: var(--text-dim); line-height: 1.5;
+  margin-top: 12px;
+}
+.callout strong { color: var(--amber); }
+
+/* Settings row */
+.settings-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 14px 0; border-bottom: 1px solid var(--border);
+}
+.settings-label { font-size: 14px; }
+.settings-value {
+  font-family: 'JetBrains Mono', monospace; font-size: 14px;
+  padding: 6px 12px; background: var(--bg); border: 1px solid var(--border);
+  border-radius: 8px; color: var(--text); width: 80px; text-align: right;
+  outline: none;
+}
+.settings-value:focus { border-color: var(--accent); }
+
+/* Reset button */
+.btn-reset {
+  width: 100%; padding: 14px; margin-top: 20px;
+  background: var(--red-dim); border: 1px solid var(--red);
+  border-radius: 12px; color: var(--red); font-size: 14px;
+  font-weight: 600; cursor: pointer;
+}
+
+/* Animations */
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.card { animation: fadeIn 0.3s ease; }
+
+/* Bar chart simple */
+.chart-bars { display: flex; align-items: flex-end; gap: 3px; height: 80px; margin-top: 12px; }
+.chart-bar {
+  flex: 1; background: var(--accent); border-radius: 3px 3px 0 0;
+  min-height: 2px; transition: height 0.3s ease; position: relative;
+}
+.chart-bar.empty { background: var(--surface2); }
+.chart-bar:hover { opacity: 0.8; }
+
+/* Total recap */
+.total-card {
+  background: linear-gradient(135deg, #1e3a5f 0%, #0f1b2d 100%);
+  border: 1px solid var(--accent);
+  box-shadow: 0 0 30px var(--accent-glow);
+}
+
+.hidden { display: none; }
+
+@media (min-width: 500px) {
+  .content { max-width: 480px; margin: 0 auto; }
+  .header, .tabs { max-width: 480px; margin: 0 auto; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <h1>CDD <span>Tracker</span></h1>
+    <div class="header-badge" id="progressBadge">M0/18</div>
+  </div>
+  <div class="header-sub">Suivi indemnités fin de contrat — ORA / ORY</div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('dashboard')">Dashboard</div>
+  <div class="tab" onclick="switchTab('salaires')">Salaires</div>
+  <div class="tab" onclick="switchTab('indemnites')">Indemnités</div>
+  <div class="tab" onclick="switchTab('chomage')">ARE</div>
+  <div class="tab" onclick="switchTab('config')">Config</div>
+</div>
+
+<!-- ========== DASHBOARD ========== -->
+<div class="content" id="page-dashboard">
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Progression contrat</div>
+      <div class="card-label" id="dateRange"></div>
+    </div>
+    <div class="big-number accent" id="dashProgress">0%</div>
+    <div class="progress-container">
+      <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressFill" style="width:0%"></div></div>
+      <div class="progress-labels">
+        <span id="startLabel">Début</span>
+        <span id="endLabel">Fin</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="stat-grid">
+    <div class="stat-box">
+      <div class="label">Brut cumulé</div>
+      <div class="value green" id="dashCumul">0 €</div>
+      <div class="sub" id="dashMoisRemplis">0 mois saisis</div>
+    </div>
+    <div class="stat-box">
+      <div class="label">Brut moyen / mois</div>
+      <div class="value" id="dashMoyenne">— €</div>
+      <div class="sub">sur mois saisis</div>
+    </div>
+    <div class="stat-box">
+      <div class="label">Indemnités nettes</div>
+      <div class="value amber" id="dashPreca">0 €</div>
+      <div class="sub">précarité + ICCP</div>
+    </div>
+    <div class="stat-box">
+      <div class="label">ARE nette estimée</div>
+      <div class="value cyan" id="dashARE">— €</div>
+      <div class="sub">/mois</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title" style="margin-bottom:12px">Évolution brut mensuel</div>
+    <div class="chart-bars" id="chartBars"></div>
+  </div>
+</div>
+
+<!-- ========== SALAIRES ========== -->
+<div class="content hidden" id="page-salaires">
+  <div class="section-title"><span class="icon">📋</span> Saisie des salaires bruts</div>
+  <div class="callout">
+    <strong>Ligne "TOTAL BRUT"</strong> sur ta fiche de paie. Inclut base + HS + primes nuit/dimanche.
+  </div>
+  <div style="margin-top:16px" id="salaryInputs"></div>
+</div>
+
+<!-- ========== INDEMNITÉS ========== -->
+<div class="content hidden" id="page-indemnites">
+  <div class="section-title"><span class="icon">💰</span> Indemnités fin de CDD</div>
+
+  <div class="card total-card">
+    <div class="card-header">
+      <div class="card-title" style="color:var(--cyan)">Total indemnités</div>
+      <div class="card-label">estimation</div>
+    </div>
+    <div style="display:flex;gap:20px;align-items:baseline">
+      <div>
+        <div style="font-size:11px;color:var(--text-dim);margin-bottom:2px">NET</div>
+        <div class="big-number green" id="totalIndemnNet">0 €</div>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-dim);margin-bottom:2px">BRUT</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:20px;color:var(--text-dim)" id="totalIndemn">0 €</div>
+      </div>
+    </div>
+    <div style="font-size:12px;color:var(--text-dim);margin-top:4px" id="totalIndemnNote"></div>
+  </div>
+
+  <div class="card">
+    <div class="timeline-item">
+      <div class="timeline-dot" style="background:var(--green)"></div>
+      <div class="timeline-content">
+        <div class="timeline-title">Brut cumulé (18 mois)</div>
+        <div class="timeline-desc">Total des salaires bruts sur la durée du CDD</div>
+        <div class="timeline-amount" id="indBrut" style="color:var(--text)">0 €</div>
+      </div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-dot" style="background:var(--amber)"></div>
+      <div class="timeline-content">
+        <div class="timeline-title">Prime de précarité</div>
+        <div class="timeline-desc">10% du brut total — due si pas de proposition CDI</div>
+        <div style="display:flex;gap:16px;align-items:baseline;margin-top:4px">
+          <div class="timeline-amount" id="indPreca" style="color:var(--amber);margin:0">0 €</div>
+          <div style="font-size:13px;color:var(--text-dim);font-family:'JetBrains Mono',monospace">net <span id="indPrecaNet" style="color:var(--green)">0 €</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-dot" style="background:var(--cyan)"></div>
+      <div class="timeline-content">
+        <div class="timeline-title">ICCP (Congés payés)</div>
+        <div class="timeline-desc">10% × (brut + prime précarité) — congés non pris</div>
+        <div style="display:flex;gap:16px;align-items:baseline;margin-top:4px">
+          <div class="timeline-amount" id="indICCP" style="color:var(--cyan);margin:0">0 €</div>
+          <div style="font-size:13px;color:var(--text-dim);font-family:'JetBrains Mono',monospace">net <span id="indICCPNet" style="color:var(--green)">0 €</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout">
+    <strong>Note :</strong> La prime de précarité n'est pas due si l'employeur propose un CDI équivalent ou si le CDD débouche sur un CDI. L'ICCP diminue si des congés sont pris.
+  </div>
+</div>
+
+<!-- ========== CHÔMAGE ========== -->
+<div class="content hidden" id="page-chomage">
+  <div class="section-title"><span class="icon">📊</span> Estimation ARE (chômage)</div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">ARE nette mensuelle</div>
+      <div class="card-label">estimation</div>
+    </div>
+    <div class="big-number cyan" id="areNet">— €</div>
+    <div style="font-size:12px;color:var(--text-dim);margin-top:4px">
+      ≈ <span id="arePctSalaire">—</span>% du salaire net actuel
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title" style="margin-bottom:12px">Détail du calcul</div>
+    <div class="are-breakdown">
+      <div class="are-row">
+        <span class="label">SJR (Salaire Journalier Réf.)</span>
+        <span class="value" id="areSJR">— €</span>
+      </div>
+      <div class="are-row">
+        <span class="label">Formule 1 : 40.4% + 13,18€</span>
+        <span class="value" id="areF1">— €</span>
+      </div>
+      <div class="are-row">
+        <span class="label">Formule 2 : 57% du SJR</span>
+        <span class="value" id="areF2">— €</span>
+      </div>
+      <div class="are-row" style="border:1px solid var(--cyan)">
+        <span class="label" style="font-weight:600">ARE journalière brute</span>
+        <span class="value" style="color:var(--cyan)" id="areBrut">— €</span>
+      </div>
+      <div class="are-row">
+        <span class="label">Retenue retraite (3%)</span>
+        <span class="value" id="areRetenue">— €</span>
+      </div>
+      <div class="are-row">
+        <span class="label">ARE journalière nette</span>
+        <span class="value" id="areJourNet">— €</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title" style="margin-bottom:12px">Durée d'indemnisation</div>
+    <div class="are-breakdown">
+      <div class="are-row">
+        <span class="label">Durée brute</span>
+        <span class="value" id="areDureeBrute">18 mois</span>
+      </div>
+      <div class="are-row">
+        <span class="label">Coeff. contracyclique (×0.75)</span>
+        <span class="value" id="areDureeCoeff">13.5 mois</span>
+      </div>
+      <div class="are-row">
+        <span class="label">Délai de carence</span>
+        <span class="value">7 jours</span>
+      </div>
+    </div>
+    <div class="callout">
+      <strong>Attention :</strong> Le coefficient 0.75 s'applique si le chômage est &lt; 9%. La durée exacte dépend de la conjoncture au moment de l'inscription France Travail.
+    </div>
+  </div>
+</div>
+
+<!-- ========== CONFIG ========== -->
+<div class="content hidden" id="page-config">
+  <div class="section-title"><span class="icon">⚙️</span> Configuration</div>
+  <div class="card">
+    <div class="settings-row">
+      <span class="settings-label">Durée du CDD (mois)</span>
+      <input class="settings-value" type="number" id="cfgDuree" value="18" min="1" max="36" onchange="saveConfig()">
+    </div>
+    <div class="settings-row">
+      <span class="settings-label">Date de début</span>
+      <input class="settings-value" type="month" id="cfgStart" style="width:140px" onchange="saveConfig()">
+    </div>
+    <div class="settings-row">
+      <span class="settings-label">Net mensuel actuel (réf.)</span>
+      <input class="settings-value" type="number" id="cfgNet" placeholder="2177" onchange="saveConfig()">
+    </div>
+    <div class="settings-row">
+      <span class="settings-label">Coeff. contracyclique</span>
+      <input class="settings-value" type="number" id="cfgCoeff" value="0.75" step="0.05" min="0.5" max="1" onchange="saveConfig()">
+    </div>
+    <div class="settings-row">
+      <span class="settings-label">Part fixe ARE (€)</span>
+      <input class="settings-value" type="number" id="cfgFixe" value="13.18" step="0.01" onchange="saveConfig()">
+    </div>
+    <div class="settings-row">
+      <span class="settings-label">Taux cotisations salariales (%)</span>
+      <input class="settings-value" type="number" id="cfgCotis" value="23.5" step="0.1" min="15" max="35" onchange="saveConfig()">
+    </div>
+    <button class="btn-reset" onclick="resetAll()">Réinitialiser toutes les données</button>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'cdd_tracker_v2';
+
+let state = loadState();
+
+function defaultState() {
+  return {
+    duree: 18,
+    startMonth: '2025-11',
+    netRef: 2177,
+    coeff: 0.75,
+    fixeARE: 13.18,
+    tauxCotis: 23.5,
+    salaires: {}
+  };
+}
+
+function loadState() {
+  try {
+    const s = localStorage.getItem(STORAGE_KEY);
+    if (s) return { ...defaultState(), ...JSON.parse(s) };
+  } catch(e) {}
+  return defaultState();
+}
+
+function saveState() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function switchTab(id) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.content').forEach(c => c.classList.add('hidden'));
+  document.getElementById('page-' + id).classList.remove('hidden');
+  event.target.classList.add('active');
+  if (id === 'salaires') buildSalaryInputs();
+  recalcAll();
+}
+
+function getMonths() {
+  const months = [];
+  const [y, m] = state.startMonth.split('-').map(Number);
+  for (let i = 0; i < state.duree; i++) {
+    const date = new Date(y, m - 1 + i, 1);
+    const key = date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0');
+    const label = date.toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' });
+    months.push({ key, label, date });
+  }
+  return months;
+}
+
+function fmt(n) {
+  return Math.round(n).toLocaleString('fr-FR');
+}
+function fmt2(n) {
+  return n.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function buildSalaryInputs() {
+  const container = document.getElementById('salaryInputs');
+  const months = getMonths();
+  const now = new Date();
+  container.innerHTML = '';
+  
+  months.forEach((m, i) => {
+    const val = state.salaires[m.key] || '';
+    const isPast = m.date < new Date(now.getFullYear(), now.getMonth(), 1);
+    const isCurrent = m.date.getFullYear() === now.getFullYear() && m.date.getMonth() === now.getMonth();
+    const cls = val ? 'filled' : (isCurrent ? 'current' : (!isPast && !isCurrent ? 'future' : ''));
+    
+    const row = document.createElement('div');
+    row.className = 'month-row ' + cls;
+    row.innerHTML = `
+      <span class="month-label">M${i + 1}</span>
+      <span class="month-sublabel">${m.label.charAt(0).toUpperCase() + m.label.slice(1)}</span>
+      <input class="month-input" type="number" inputmode="decimal" placeholder="Brut €"
+        value="${val}" data-key="${m.key}" onchange="updateSalary(this)" onfocus="this.select()">
+    `;
+    container.appendChild(row);
+  });
+}
+
+function updateSalary(el) {
+  const key = el.dataset.key;
+  const val = parseFloat(el.value);
+  if (isNaN(val) || val <= 0) {
+    delete state.salaires[key];
+  } else {
+    state.salaires[key] = val;
+  }
+  saveState();
+  
+  const row = el.closest('.month-row');
+  row.className = 'month-row ' + (val > 0 ? 'filled' : '');
+  
+  recalcAll();
+}
+
+function recalcAll() {
+  const months = getMonths();
+  const filled = months.filter(m => state.salaires[m.key] > 0);
+  const cumul = filled.reduce((s, m) => s + state.salaires[m.key], 0);
+  const nbFilled = filled.length;
+  const moyenne = nbFilled > 0 ? cumul / nbFilled : 0;
+  
+  // Projection sur 18 mois
+  const brutEstime = nbFilled > 0 ? moyenne * state.duree : 0;
+  
+  // Indemnités
+  const precarite = brutEstime * 0.10;
+  const iccp = (brutEstime + precarite) * 0.10;
+  const totalIndemn = precarite + iccp;
+  const txCotis = state.tauxCotis / 100;
+  const totalIndemnNet = totalIndemn * (1 - txCotis);
+  
+  // ARE
+  const joursCalendaires = Math.round(state.duree * 30.44);
+  const sjr = brutEstime > 0 ? brutEstime / joursCalendaires : 0;
+  const f1 = sjr * 0.404 + state.fixeARE;
+  const f2 = sjr * 0.57;
+  const areBrut = Math.max(f1, f2);
+  const plafond = sjr * 0.75;
+  const areJourBrut = Math.min(areBrut, plafond);
+  const retraite = areJourBrut > 31 ? areJourBrut * 0.03 : 0;
+  // CSG si > 53€
+  const csg = areJourBrut >= 53 ? areJourBrut * 0.067 : 0;
+  const areJourNet = areJourBrut - retraite - csg;
+  const areMoisNet = areJourNet * 30;
+  
+  // Progress
+  const now = new Date();
+  const [sy, sm] = state.startMonth.split('-').map(Number);
+  const start = new Date(sy, sm - 1, 1);
+  const end = new Date(sy, sm - 1 + state.duree, 0);
+  const totalDays = (end - start) / 86400000;
+  const elapsed = Math.max(0, Math.min(totalDays, (now - start) / 86400000));
+  const pct = Math.round((elapsed / totalDays) * 100);
+  const moisEcoules = Math.floor(elapsed / 30.44);
+  
+  // Dashboard
+  document.getElementById('progressBadge').textContent = `M${moisEcoules}/${state.duree}`;
+  document.getElementById('dashProgress').textContent = pct + '%';
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('dateRange').textContent = start.toLocaleDateString('fr-FR', {month:'short',year:'2-digit'}) + ' → ' + end.toLocaleDateString('fr-FR', {month:'short',year:'2-digit'});
+  document.getElementById('startLabel').textContent = start.toLocaleDateString('fr-FR', {month:'short',year:'2-digit'});
+  document.getElementById('endLabel').textContent = end.toLocaleDateString('fr-FR', {month:'short',year:'2-digit'});
+  
+  document.getElementById('dashCumul').textContent = fmt(cumul) + ' €';
+  document.getElementById('dashMoisRemplis').textContent = nbFilled + '/' + state.duree + ' mois saisis';
+  document.getElementById('dashMoyenne').textContent = nbFilled > 0 ? fmt(moyenne) + ' €' : '— €';
+  document.getElementById('dashPreca').textContent = fmt(totalIndemnNet) + ' €';
+  document.getElementById('dashARE').textContent = brutEstime > 0 ? fmt(areMoisNet) + ' €' : '— €';
+  
+  // Chart
+  const chartEl = document.getElementById('chartBars');
+  const maxVal = Math.max(...months.map(m => state.salaires[m.key] || 0), 1);
+  chartEl.innerHTML = months.map(m => {
+    const v = state.salaires[m.key] || 0;
+    const h = v > 0 ? Math.max(4, (v / maxVal) * 70) : 2;
+    return `<div class="chart-bar ${v > 0 ? '' : 'empty'}" style="height:${h}px" title="${m.label}: ${v > 0 ? fmt(v) + '€' : '—'}"></div>`;
+  }).join('');
+  
+  // Indemnités page
+  const precaNet = precarite * (1 - txCotis);
+  const iccpNet = iccp * (1 - txCotis);
+  
+  document.getElementById('indBrut').textContent = fmt(brutEstime) + ' €';
+  document.getElementById('indPreca').textContent = fmt(precarite) + ' € brut';
+  document.getElementById('indPrecaNet').textContent = fmt(precaNet) + ' €';
+  document.getElementById('indICCP').textContent = fmt(iccp) + ' € brut';
+  document.getElementById('indICCPNet').textContent = fmt(iccpNet) + ' €';
+  document.getElementById('totalIndemn').textContent = fmt(totalIndemn) + ' € brut';
+  document.getElementById('totalIndemnNet').textContent = fmt(totalIndemnNet) + ' €';
+  document.getElementById('totalIndemnNote').textContent = nbFilled < state.duree 
+    ? `Projection sur ${nbFilled} mois saisis (moy. ${fmt(moyenne)} €/mois) · cotis. ${state.tauxCotis}%` 
+    : `Basé sur les salaires réels · cotis. ${state.tauxCotis}%`;
+  
+  // ARE page
+  if (brutEstime > 0) {
+    document.getElementById('areSJR').textContent = fmt2(sjr) + ' €';
+    document.getElementById('areF1').textContent = fmt2(f1) + ' €/j';
+    document.getElementById('areF2').textContent = fmt2(f2) + ' €/j';
+    document.getElementById('areBrut').textContent = fmt2(areJourBrut) + ' €/j';
+    document.getElementById('areRetenue').textContent = '−' + fmt2(retraite + csg) + ' €/j';
+    document.getElementById('areJourNet').textContent = fmt2(areJourNet) + ' €/j';
+    document.getElementById('areNet').textContent = fmt(areMoisNet) + ' €';
+    
+    const pctNet = state.netRef > 0 ? Math.round((areMoisNet / state.netRef) * 100) : 0;
+    document.getElementById('arePctSalaire').textContent = pctNet;
+    
+    const dureeBrute = state.duree;
+    const dureeCoeff = state.duree * state.coeff;
+    document.getElementById('areDureeBrute').textContent = dureeBrute + ' mois';
+    document.getElementById('areDureeCoeff').textContent = dureeCoeff.toFixed(1) + ' mois';
+  }
+}
+
+function saveConfig() {
+  state.duree = parseInt(document.getElementById('cfgDuree').value) || 18;
+  state.startMonth = document.getElementById('cfgStart').value || '2025-11';
+  state.netRef = parseFloat(document.getElementById('cfgNet').value) || 2177;
+  state.coeff = parseFloat(document.getElementById('cfgCoeff').value) || 0.75;
+  state.fixeARE = parseFloat(document.getElementById('cfgFixe').value) || 13.18;
+  state.tauxCotis = parseFloat(document.getElementById('cfgCotis').value) || 23.5;
+  saveState();
+  recalcAll();
+}
+
+function resetAll() {
+  if (confirm('Supprimer toutes les données saisies ?')) {
+    localStorage.removeItem(STORAGE_KEY);
+    state = defaultState();
+    initConfig();
+    recalcAll();
+  }
+}
+
+function initConfig() {
+  document.getElementById('cfgDuree').value = state.duree;
+  document.getElementById('cfgStart').value = state.startMonth;
+  document.getElementById('cfgNet').value = state.netRef;
+  document.getElementById('cfgCoeff').value = state.coeff;
+  document.getElementById('cfgFixe').value = state.fixeARE;
+  document.getElementById('cfgCotis').value = state.tauxCotis;
+}
+
+// Init
+initConfig();
+recalcAll();
+</script>
+</body>
+</html>
